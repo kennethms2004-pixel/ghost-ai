@@ -35,6 +35,8 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-label="Projects sidebar"
+        aria-hidden={!isOpen}
+        tabIndex={isOpen ? undefined : -1}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-surface-border">
           <span className="text-sm font-medium text-copy-primary">Projects</span>
