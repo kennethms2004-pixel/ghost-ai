@@ -19,5 +19,10 @@ export async function getCurrentUserContext(): Promise<CurrentUserContext> {
     user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId) ??
     user.emailAddresses[0]
 
-  return { userId: user.id, email: primary?.emailAddress ?? null }
+  // Lowercase the email so collaborator lookups (stored lowercase) match
+  // regardless of the casing Clerk reports.
+  return {
+    userId: user.id,
+    email: primary?.emailAddress?.toLowerCase() ?? null,
+  }
 }

@@ -41,7 +41,7 @@ export function ProjectListItem({
               <Button
                 variant="ghost"
                 size="icon-sm"
-                className="text-copy-muted opacity-0 group-hover:opacity-100 aria-expanded:opacity-100 hover:text-copy-primary"
+                className="text-copy-muted opacity-0 group-hover:opacity-100 aria-expanded:opacity-100 focus-visible:opacity-100 hover:text-copy-primary focus-visible:text-copy-primary"
                 aria-label={`Actions for ${project.name}`}
               />
             }

@@ -1,10 +1,16 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
-import {
-  deleteProject,
-  getProjectById,
-  renameProject,
-} from '@/lib/projects'
+import { deleteProject, renameProject } from '@/lib/projects'
+
+/** True for a Prisma "record not found" error (P2025). */
+function isNotFoundError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === 'P2025'
+  )
+}
 
 /** PATCH /api/projects/[projectId] — rename a project (owner only). */
 export async function PATCH(
@@ -17,13 +23,6 @@ export async function PATCH(
   }
 
   const { projectId } = await ctx.params
-  const project = await getProjectById(projectId)
-  if (!project) {
-    return NextResponse.json({ error: 'Project not found' }, { status: 404 })
-  }
-  if (project.ownerId !== userId) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
 
   let body: unknown
   try {
@@ -40,8 +39,17 @@ export async function PATCH(
     )
   }
 
-  const updated = await renameProject(projectId, name)
-  return NextResponse.json({ project: updated })
+  try {
+    const updated = await renameProject(projectId, userId, name)
+    return NextResponse.json({ project: updated })
+  } catch (error) {
+    // The owner-scoped update finds no row when the project is missing or not
+    // owned by this user; both collapse to 404 to avoid leaking existence.
+    if (isNotFoundError(error)) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
+    throw error
+  }
 }
 
 /** DELETE /api/projects/[projectId] — delete a project (owner only). */
@@ -55,14 +63,14 @@ export async function DELETE(
   }
 
   const { projectId } = await ctx.params
-  const project = await getProjectById(projectId)
-  if (!project) {
-    return NextResponse.json({ error: 'Project not found' }, { status: 404 })
-  }
-  if (project.ownerId !== userId) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
 
-  await deleteProject(projectId)
-  return NextResponse.json({ success: true })
+  try {
+    await deleteProject(projectId, userId)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    if (isNotFoundError(error)) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
+    throw error
+  }
 }

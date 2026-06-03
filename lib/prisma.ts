@@ -12,8 +12,11 @@ import { PrismaClient } from '@/generated/prisma/client'
 // two branches from collapsing into an uncallable union.
 function createPrismaClient(): PrismaClient {
   const url = process.env.DATABASE_URL
+  if (!url) {
+    throw new Error('Missing DATABASE_URL environment variable')
+  }
 
-  if (url?.startsWith('prisma+postgres://')) {
+  if (url.startsWith('prisma+postgres://')) {
     return new PrismaClient({ accelerateUrl: url }).$extends(
       withAccelerate(),
     ) as unknown as PrismaClient

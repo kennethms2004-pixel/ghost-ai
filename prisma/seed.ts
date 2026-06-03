@@ -1,11 +1,28 @@
 import 'dotenv/config'
 import { PrismaPg } from '@prisma/adapter-pg'
+import { withAccelerate } from '@prisma/extension-accelerate'
 import { PrismaClient } from '../generated/prisma/client.js'
 
 // Seeds run as a standalone script (via tsx), so they instantiate their own
-// adapter-backed client rather than importing the server-only lib/prisma.ts.
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
-const prisma = new PrismaClient({ adapter })
+// client rather than importing the server-only lib/prisma.ts. Mirror its
+// branching: Accelerate URLs (`prisma+postgres://`) use the Accelerate
+// extension; any other URL is a direct connection via the pg adapter.
+function createPrismaClient(): PrismaClient {
+  const url = process.env.DATABASE_URL
+  if (!url) {
+    throw new Error('Missing DATABASE_URL environment variable')
+  }
+  if (url.startsWith('prisma+postgres://')) {
+    // Pin to the base client type so the two branches don't collapse into an
+    // uncallable union (see lib/prisma.ts for the full rationale).
+    return new PrismaClient({ accelerateUrl: url }).$extends(
+      withAccelerate(),
+    ) as unknown as PrismaClient
+  }
+  return new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) })
+}
+
+const prisma = createPrismaClient()
 
 async function main() {
   const ownerId = 'user_seed_owner'

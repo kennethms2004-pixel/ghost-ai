@@ -108,6 +108,9 @@ export function useProjectActions(): UseProjectActions {
       setName("");
       // Project id and room id are the same value; open that workspace.
       router.push(`/editor/${project.id}`);
+      // The editor layout (and its sidebar) is shared across these routes and
+      // won't refetch on navigation, so refresh to surface the new project.
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -156,6 +159,9 @@ export function useProjectActions(): UseProjectActions {
       // Leaving a workspace that no longer exists would 404; send the user home.
       if (activeWorkspaceId === target.id) {
         router.push("/editor");
+        // Shared layout/sidebar won't refetch on navigation; refresh to drop
+        // the deleted project from the list.
+        router.refresh();
       } else {
         router.refresh();
       }

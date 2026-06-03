@@ -25,8 +25,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  if (body.id !== undefined && (typeof body.id !== 'string' || body.id.trim().length === 0)) {
-    return NextResponse.json({ error: '`id` must be a non-empty string' }, { status: 400 })
+  // The id doubles as a URL path segment (/editor/[id], /api/projects/[id]), so
+  // reject anything that isn't a single URL-safe segment — including encoded
+  // separators — to avoid creating unreachable projects.
+  if (
+    body.id !== undefined &&
+    (typeof body.id !== 'string' || !/^[^/?#%]+$/.test(body.id.trim()))
+  ) {
+    return NextResponse.json(
+      { error: '`id` must be a non-empty single URL-safe path segment' },
+      { status: 400 },
+    )
   }
   if (body.name !== undefined && typeof body.name !== 'string') {
     return NextResponse.json({ error: '`name` must be a string' }, { status: 400 })

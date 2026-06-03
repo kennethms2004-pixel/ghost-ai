@@ -73,8 +73,9 @@ export function ProjectSidebar({
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-label="Projects sidebar"
-        aria-hidden={!isOpen}
-        tabIndex={isOpen ? undefined : -1}
+        // `inert` removes the whole subtree from focus/AT order when closed, so
+        // the off-screen drawer's links and buttons aren't keyboard-reachable.
+        inert={!isOpen}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-surface-border">
           <span className="text-sm font-medium text-copy-primary">Projects</span>

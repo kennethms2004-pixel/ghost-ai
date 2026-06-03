@@ -80,15 +80,23 @@ export function findAccessibleProject(
   })
 }
 
-/** Rename a project. Caller must verify ownership first. */
-export function renameProject(projectId: string, name: string) {
+/**
+ * Rename a project, scoped to its owner so the ownership check and the write
+ * happen atomically. Throws Prisma `P2025` when no project matches the id and
+ * owner (missing or not owned); callers map that to a 404.
+ */
+export function renameProject(projectId: string, ownerId: string, name: string) {
   return prisma.project.update({
-    where: { id: projectId },
+    where: { id: projectId, ownerId },
     data: { name: name.trim() },
   })
 }
 
-/** Delete a project. Caller must verify ownership first. */
-export function deleteProject(projectId: string) {
-  return prisma.project.delete({ where: { id: projectId } })
+/**
+ * Delete a project, scoped to its owner so the ownership check and the write
+ * happen atomically. Throws Prisma `P2025` when no project matches the id and
+ * owner (missing or not owned); callers map that to a 404.
+ */
+export function deleteProject(projectId: string, ownerId: string) {
+  return prisma.project.delete({ where: { id: projectId, ownerId } })
 }
