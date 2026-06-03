@@ -42,3 +42,9 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# editor / agent tooling
+/.vscode/
+/.agents/
+/.claude/
+/skills-lock.json

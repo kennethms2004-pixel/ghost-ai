@@ -4,6 +4,10 @@ import { X, Plus, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ProjectListItem } from "./project-list-item";
+import { useProjectDialogsContext } from "./project-dialogs-provider";
+import { MOCK_OWNED_PROJECTS, MOCK_SHARED_PROJECTS } from "@/lib/mock-projects";
+import type { Project } from "@/types/project";
 
 interface ProjectSidebarProps {
   isOpen: boolean;
@@ -19,12 +23,34 @@ function EmptyState({ label }: { label: string }) {
   );
 }
 
+function ProjectList({
+  projects,
+  emptyLabel,
+}: {
+  projects: Project[];
+  emptyLabel: string;
+}) {
+  if (projects.length === 0) {
+    return <EmptyState label={emptyLabel} />;
+  }
+
+  return (
+    <div className="flex flex-col gap-0.5 px-2 py-2">
+      {projects.map((project) => (
+        <ProjectListItem key={project.id} project={project} />
+      ))}
+    </div>
+  );
+}
+
 export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
+  const { openCreate } = useProjectDialogsContext();
+
   return (
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-40 bg-black/60 md:bg-transparent"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -59,19 +85,26 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
 
           <TabsContent value="my-projects" className="flex-1 min-h-0 mt-0">
             <ScrollArea className="h-full">
-              <EmptyState label="projects" />
+              <ProjectList projects={MOCK_OWNED_PROJECTS} emptyLabel="projects" />
             </ScrollArea>
           </TabsContent>
 
           <TabsContent value="shared" className="flex-1 min-h-0 mt-0">
             <ScrollArea className="h-full">
-              <EmptyState label="shared projects" />
+              <ProjectList
+                projects={MOCK_SHARED_PROJECTS}
+                emptyLabel="shared projects"
+              />
             </ScrollArea>
           </TabsContent>
         </Tabs>
 
         <div className="p-4 border-t border-surface-border">
-          <Button className="w-full gap-2 bg-brand text-base hover:opacity-90" size="sm">
+          <Button
+            className="w-full gap-2 bg-brand text-base hover:opacity-90"
+            size="sm"
+            onClick={openCreate}
+          >
             <Plus className="h-4 w-4" />
             New Project
           </Button>
