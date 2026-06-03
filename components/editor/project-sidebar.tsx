@@ -6,12 +6,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProjectListItem } from "./project-list-item";
 import { useProjectDialogsContext } from "./project-dialogs-provider";
-import { MOCK_OWNED_PROJECTS, MOCK_SHARED_PROJECTS } from "@/lib/mock-projects";
 import type { Project } from "@/types/project";
 
 interface ProjectSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  ownedProjects: Project[];
+  sharedProjects: Project[];
 }
 
 function EmptyState({ label }: { label: string }) {
@@ -26,9 +27,11 @@ function EmptyState({ label }: { label: string }) {
 function ProjectList({
   projects,
   emptyLabel,
+  onNavigate,
 }: {
   projects: Project[];
   emptyLabel: string;
+  onNavigate: () => void;
 }) {
   if (projects.length === 0) {
     return <EmptyState label={emptyLabel} />;
@@ -37,13 +40,22 @@ function ProjectList({
   return (
     <div className="flex flex-col gap-0.5 px-2 py-2">
       {projects.map((project) => (
-        <ProjectListItem key={project.id} project={project} />
+        <ProjectListItem
+          key={project.id}
+          project={project}
+          onNavigate={onNavigate}
+        />
       ))}
     </div>
   );
 }
 
-export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
+export function ProjectSidebar({
+  isOpen,
+  onClose,
+  ownedProjects,
+  sharedProjects,
+}: ProjectSidebarProps) {
   const { openCreate } = useProjectDialogsContext();
 
   return (
@@ -85,15 +97,20 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
 
           <TabsContent value="my-projects" className="flex-1 min-h-0 mt-0">
             <ScrollArea className="h-full">
-              <ProjectList projects={MOCK_OWNED_PROJECTS} emptyLabel="projects" />
+              <ProjectList
+                projects={ownedProjects}
+                emptyLabel="projects"
+                onNavigate={onClose}
+              />
             </ScrollArea>
           </TabsContent>
 
           <TabsContent value="shared" className="flex-1 min-h-0 mt-0">
             <ScrollArea className="h-full">
               <ProjectList
-                projects={MOCK_SHARED_PROJECTS}
+                projects={sharedProjects}
                 emptyLabel="shared projects"
+                onNavigate={onClose}
               />
             </ScrollArea>
           </TabsContent>

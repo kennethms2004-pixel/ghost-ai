@@ -16,6 +16,7 @@ interface DeleteProjectDialogProps {
   onOpenChange: (open: boolean) => void;
   project: Project | null;
   isSubmitting: boolean;
+  error: string | null;
   onSubmit: () => void;
 }
 
@@ -24,6 +25,7 @@ export function DeleteProjectDialog({
   onOpenChange,
   project,
   isSubmitting,
+  error,
   onSubmit,
 }: DeleteProjectDialogProps) {
   return (
@@ -37,6 +39,8 @@ export function DeleteProjectDialog({
             cannot be undone.
           </DialogDescription>
         </DialogHeader>
+
+        {error && <p className="text-sm text-error">{error}</p>}
 
         <DialogFooter>
           <Button

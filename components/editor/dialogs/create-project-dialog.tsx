@@ -10,14 +10,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { slugify } from "@/lib/utils";
 
 interface CreateProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   name: string;
   onNameChange: (value: string) => void;
+  roomId: string;
   isSubmitting: boolean;
+  error: string | null;
   onSubmit: () => void;
 }
 
@@ -26,10 +27,12 @@ export function CreateProjectDialog({
   onOpenChange,
   name,
   onNameChange,
+  roomId,
   isSubmitting,
+  error,
   onSubmit,
 }: CreateProjectDialogProps) {
-  const slug = slugify(name);
+  const canSubmit = name.trim().length > 0 && !isSubmitting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -45,7 +48,7 @@ export function CreateProjectDialog({
           id="create-project-form"
           onSubmit={(event) => {
             event.preventDefault();
-            if (!slug || isSubmitting) return;
+            if (!canSubmit) return;
             onSubmit();
           }}
           className="flex flex-col gap-3"
@@ -58,11 +61,10 @@ export function CreateProjectDialog({
             aria-label="Project name"
           />
           <p className="text-xs text-copy-muted">
-            Slug:{" "}
-            <span className="font-mono text-copy-secondary">
-              {slug || "—"}
-            </span>
+            Room ID:{" "}
+            <span className="font-mono text-copy-secondary">{roomId}</span>
           </p>
+          {error && <p className="text-sm text-error">{error}</p>}
         </form>
 
         <DialogFooter>
@@ -77,7 +79,7 @@ export function CreateProjectDialog({
           <Button
             type="submit"
             form="create-project-form"
-            disabled={!slug || isSubmitting}
+            disabled={!canSubmit}
           >
             {isSubmitting ? "Creating…" : "Create project"}
           </Button>

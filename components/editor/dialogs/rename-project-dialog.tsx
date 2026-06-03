@@ -20,6 +20,7 @@ interface RenameProjectDialogProps {
   name: string;
   onNameChange: (value: string) => void;
   isSubmitting: boolean;
+  error: string | null;
   onSubmit: () => void;
 }
 
@@ -30,6 +31,7 @@ export function RenameProjectDialog({
   name,
   onNameChange,
   isSubmitting,
+  error,
   onSubmit,
 }: RenameProjectDialogProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -73,6 +75,7 @@ export function RenameProjectDialog({
             onChange={(event) => onNameChange(event.target.value)}
             aria-label="Project name"
           />
+          {error && <p className="mt-3 text-sm text-error">{error}</p>}
         </form>
 
         <DialogFooter>

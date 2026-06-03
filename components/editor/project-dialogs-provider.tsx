@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import { useProjectDialogs } from "@/hooks/use-project-dialogs";
+import { useProjectActions } from "@/hooks/use-project-actions";
 import type { Project } from "@/types/project";
 import { CreateProjectDialog } from "./dialogs/create-project-dialog";
 import { RenameProjectDialog } from "./dialogs/rename-project-dialog";
@@ -27,7 +27,7 @@ export function ProjectDialogsProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const dialogs = useProjectDialogs();
+  const dialogs = useProjectActions();
 
   return (
     <ProjectDialogsContext.Provider
@@ -44,7 +44,9 @@ export function ProjectDialogsProvider({
         onOpenChange={(open) => !open && dialogs.close()}
         name={dialogs.name}
         onNameChange={dialogs.setName}
+        roomId={dialogs.roomId}
         isSubmitting={dialogs.isSubmitting}
+        error={dialogs.error}
         onSubmit={dialogs.submitCreate}
       />
       <RenameProjectDialog
@@ -54,6 +56,7 @@ export function ProjectDialogsProvider({
         name={dialogs.name}
         onNameChange={dialogs.setName}
         isSubmitting={dialogs.isSubmitting}
+        error={dialogs.error}
         onSubmit={dialogs.submitRename}
       />
       <DeleteProjectDialog
@@ -61,6 +64,7 @@ export function ProjectDialogsProvider({
         onOpenChange={(open) => !open && dialogs.close()}
         project={dialogs.activeProject}
         isSubmitting={dialogs.isSubmitting}
+        error={dialogs.error}
         onSubmit={dialogs.submitDelete}
       />
     </ProjectDialogsContext.Provider>

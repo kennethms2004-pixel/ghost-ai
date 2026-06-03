@@ -4,8 +4,19 @@ import { useState } from "react";
 import { EditorNavbar } from "./editor-navbar";
 import { ProjectSidebar } from "./project-sidebar";
 import { ProjectDialogsProvider } from "./project-dialogs-provider";
+import type { Project } from "@/types/project";
 
-export function EditorShell({ children }: { children: React.ReactNode }) {
+interface EditorShellProps {
+  children: React.ReactNode;
+  ownedProjects: Project[];
+  sharedProjects: Project[];
+}
+
+export function EditorShell({
+  children,
+  ownedProjects,
+  sharedProjects,
+}: EditorShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -17,6 +28,8 @@ export function EditorShell({ children }: { children: React.ReactNode }) {
       <ProjectSidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        ownedProjects={ownedProjects}
+        sharedProjects={sharedProjects}
       />
       <div className="pt-12 min-h-screen bg-base">{children}</div>
     </ProjectDialogsProvider>
