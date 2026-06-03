@@ -1,0 +1,12 @@
+// Prisma schema for Ghost AI — generator + datasource only.
+// Models live in prisma/models/*.prisma (multi-file schema).
+// Connection URL is managed in prisma.config.ts (Prisma 7), not here.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

@@ -1,0 +1,35 @@
+/// A design project owned by a single Clerk user.
+model Project {
+  id             String                @id @default(cuid())
+  ownerId        String // Clerk user ID of the owner
+  name           String
+  description    String?
+  status         ProjectStatus         @default(DRAFT)
+  canvasJsonPath String? // future: Vercel Blob URL for the canvas snapshot
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  collaborators  ProjectCollaborator[]
+
+  @@index([ownerId])
+  @@index([createdAt])
+}
+
+enum ProjectStatus {
+  DRAFT
+  ARCHIVED
+}
+
+/// A non-owner invited to a project by email.
+model ProjectCollaborator {
+  id        String   @id @default(cuid())
+  projectId String
+  email     String
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, email])
+  @@index([email])
+  @@index([projectId, createdAt])
+}
