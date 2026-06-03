@@ -1,10 +1,7 @@
-import { Button } from "@/components/ui/button";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4">
-      <h1 className="text-2xl font-semibold">Ghost AI - AI Agentic Chatbot</h1>
-      <Button>Get Started</Button>
-    </main>
-  );
+export default async function Home() {
+  const { isAuthenticated } = await auth();
+  redirect(isAuthenticated ? "/editor" : "/sign-in");
 }
