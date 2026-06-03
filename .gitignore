@@ -40,5 +40,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma generated client (regenerated via postinstall)
+/generated/
+
 # clerk configuration (can include secrets)
 /.clerk/
+
+# editor / agent tooling
+/.vscode/
+/.agents/
+/.claude/
+/skills-lock.json
