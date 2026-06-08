@@ -15,21 +15,36 @@ import type { Project } from "@/types/project";
 export function ProjectListItem({
   project,
   onNavigate,
+  isActive = false,
 }: {
   project: Project;
   onNavigate?: () => void;
+  isActive?: boolean;
 }) {
   const { openRename, openDelete } = useProjectDialogsContext();
 
   return (
-    <div className="group flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-elevated">
+    <div
+      className={`group flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-elevated ${
+        isActive ? "bg-elevated" : ""
+      }`}
+      aria-current={isActive ? "page" : undefined}
+    >
       <Link
         href={`/editor/${project.id}`}
         onClick={onNavigate}
         className="flex min-w-0 flex-1 items-center gap-2"
       >
-        <FolderOpen className="h-4 w-4 shrink-0 text-copy-muted" />
-        <span className="flex-1 truncate text-sm text-copy-secondary">
+        <FolderOpen
+          className={`h-4 w-4 shrink-0 ${
+            isActive ? "text-brand" : "text-copy-muted"
+          }`}
+        />
+        <span
+          className={`flex-1 truncate text-sm ${
+            isActive ? "text-copy-primary" : "text-copy-secondary"
+          }`}
+        >
           {project.name}
         </span>
       </Link>

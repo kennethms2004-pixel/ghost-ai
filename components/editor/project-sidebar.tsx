@@ -13,6 +13,8 @@ interface ProjectSidebarProps {
   onClose: () => void;
   ownedProjects: Project[];
   sharedProjects: Project[];
+  /** Id of the project open in the workspace, highlighted in the list. */
+  activeProjectId: string | null;
 }
 
 function EmptyState({ label }: { label: string }) {
@@ -28,10 +30,12 @@ function ProjectList({
   projects,
   emptyLabel,
   onNavigate,
+  activeProjectId,
 }: {
   projects: Project[];
   emptyLabel: string;
   onNavigate: () => void;
+  activeProjectId: string | null;
 }) {
   if (projects.length === 0) {
     return <EmptyState label={emptyLabel} />;
@@ -44,6 +48,7 @@ function ProjectList({
           key={project.id}
           project={project}
           onNavigate={onNavigate}
+          isActive={project.id === activeProjectId}
         />
       ))}
     </div>
@@ -55,6 +60,7 @@ export function ProjectSidebar({
   onClose,
   ownedProjects,
   sharedProjects,
+  activeProjectId,
 }: ProjectSidebarProps) {
   const { openCreate } = useProjectDialogsContext();
 
@@ -102,6 +108,7 @@ export function ProjectSidebar({
                 projects={ownedProjects}
                 emptyLabel="projects"
                 onNavigate={onClose}
+                activeProjectId={activeProjectId}
               />
             </ScrollArea>
           </TabsContent>
@@ -112,6 +119,7 @@ export function ProjectSidebar({
                 projects={sharedProjects}
                 emptyLabel="shared projects"
                 onNavigate={onClose}
+                activeProjectId={activeProjectId}
               />
             </ScrollArea>
           </TabsContent>
