@@ -28,12 +28,12 @@ export function ProjectListItem({
       className={`group flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-elevated ${
         isActive ? "bg-elevated" : ""
       }`}
-      aria-current={isActive ? "page" : undefined}
     >
       <Link
         href={`/editor/${project.id}`}
         onClick={onNavigate}
         className="flex min-w-0 flex-1 items-center gap-2"
+        aria-current={isActive ? "page" : undefined}
       >
         <FolderOpen
           className={`h-4 w-4 shrink-0 ${

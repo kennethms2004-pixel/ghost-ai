@@ -64,6 +64,14 @@ export function ProjectSidebar({
 }: ProjectSidebarProps) {
   const { openCreate } = useProjectDialogsContext();
 
+  // Open on the Shared tab when the active workspace is a shared project, so the
+  // current project isn't hidden behind the default My Projects tab.
+  const defaultTab =
+    activeProjectId &&
+    sharedProjects.some((project) => project.id === activeProjectId)
+      ? "shared"
+      : "my-projects";
+
   return (
     <>
       {isOpen && (
@@ -96,7 +104,7 @@ export function ProjectSidebar({
           </Button>
         </div>
 
-        <Tabs defaultValue="my-projects" className="flex flex-col flex-1 min-h-0">
+        <Tabs defaultValue={defaultTab} className="flex flex-col flex-1 min-h-0">
           <TabsList className="mx-4 mt-3 mb-0 grid grid-cols-2">
             <TabsTrigger value="my-projects" className="text-xs">My Projects</TabsTrigger>
             <TabsTrigger value="shared" className="text-xs">Shared</TabsTrigger>

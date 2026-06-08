@@ -83,8 +83,9 @@ export function useCollaborators(projectId: string): UseCollaborators {
   const remove = useCallback(
     async (email: string): Promise<void> => {
       setError(null);
-      // Optimistically drop the row; restore on failure.
-      const previous = collaborators;
+      // Optimistically drop the row; on failure restore only the removed
+      // collaborator so a concurrent reload/invite isn't clobbered.
+      const removed = collaborators.find((c) => c.email === email);
       setCollaborators((current) => current.filter((c) => c.email !== email));
       try {
         const res = await fetch(
@@ -93,7 +94,13 @@ export function useCollaborators(projectId: string): UseCollaborators {
         );
         if (!res.ok) throw new Error("Could not remove that collaborator.");
       } catch (err) {
-        setCollaborators(previous);
+        if (removed) {
+          setCollaborators((current) =>
+            current.some((c) => c.email === email)
+              ? current
+              : [...current, removed],
+          );
+        }
         setError(err instanceof Error ? err.message : "Something went wrong.");
       }
     },
