@@ -6,9 +6,9 @@ import { resolveProjectAccess } from "@/lib/project-access";
 
 /**
  * Workspace shell for `/editor/[projectId]` (project id === Liveblocks room id).
- * Server-side access gate only — no canvas logic yet. The navbar (project name,
- * share, AI toggle) and the project sidebar are provided by the editor layout's
- * shell; this page renders the canvas placeholder and the AI chat sidebar.
+ * Stays a server component for the access gate; the collaborative canvas and AI
+ * panel are the client pieces it mounts. The navbar (project name, share, AI
+ * toggle) and the project sidebar come from the editor layout's shell.
  */
 export default async function WorkspacePage({
   params,
@@ -23,7 +23,7 @@ export default async function WorkspacePage({
 
   return (
     <div className="flex h-[calc(100vh-3rem)] overflow-hidden">
-      <WorkspaceCanvas />
+      <WorkspaceCanvas roomId={projectId} />
       <AiChatSidebar />
     </div>
   );
