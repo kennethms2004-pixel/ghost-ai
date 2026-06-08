@@ -13,6 +13,8 @@ interface ProjectSidebarProps {
   onClose: () => void;
   ownedProjects: Project[];
   sharedProjects: Project[];
+  /** Id of the project open in the workspace, highlighted in the list. */
+  activeProjectId: string | null;
 }
 
 function EmptyState({ label }: { label: string }) {
@@ -28,10 +30,12 @@ function ProjectList({
   projects,
   emptyLabel,
   onNavigate,
+  activeProjectId,
 }: {
   projects: Project[];
   emptyLabel: string;
   onNavigate: () => void;
+  activeProjectId: string | null;
 }) {
   if (projects.length === 0) {
     return <EmptyState label={emptyLabel} />;
@@ -44,6 +48,7 @@ function ProjectList({
           key={project.id}
           project={project}
           onNavigate={onNavigate}
+          isActive={project.id === activeProjectId}
         />
       ))}
     </div>
@@ -55,8 +60,17 @@ export function ProjectSidebar({
   onClose,
   ownedProjects,
   sharedProjects,
+  activeProjectId,
 }: ProjectSidebarProps) {
   const { openCreate } = useProjectDialogsContext();
+
+  // Open on the Shared tab when the active workspace is a shared project, so the
+  // current project isn't hidden behind the default My Projects tab.
+  const defaultTab =
+    activeProjectId &&
+    sharedProjects.some((project) => project.id === activeProjectId)
+      ? "shared"
+      : "my-projects";
 
   return (
     <>
@@ -90,7 +104,7 @@ export function ProjectSidebar({
           </Button>
         </div>
 
-        <Tabs defaultValue="my-projects" className="flex flex-col flex-1 min-h-0">
+        <Tabs defaultValue={defaultTab} className="flex flex-col flex-1 min-h-0">
           <TabsList className="mx-4 mt-3 mb-0 grid grid-cols-2">
             <TabsTrigger value="my-projects" className="text-xs">My Projects</TabsTrigger>
             <TabsTrigger value="shared" className="text-xs">Shared</TabsTrigger>
@@ -102,6 +116,7 @@ export function ProjectSidebar({
                 projects={ownedProjects}
                 emptyLabel="projects"
                 onNavigate={onClose}
+                activeProjectId={activeProjectId}
               />
             </ScrollArea>
           </TabsContent>
@@ -112,6 +127,7 @@ export function ProjectSidebar({
                 projects={sharedProjects}
                 emptyLabel="shared projects"
                 onNavigate={onClose}
+                activeProjectId={activeProjectId}
               />
             </ScrollArea>
           </TabsContent>

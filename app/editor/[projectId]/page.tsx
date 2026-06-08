@@ -1,11 +1,14 @@
-import { notFound } from "next/navigation";
-import { getCurrentUserContext } from "@/lib/auth";
-import { findAccessibleProject } from "@/lib/projects";
+import { redirect } from "next/navigation";
+import { AccessDenied } from "@/components/editor/access-denied";
+import { AiChatSidebar } from "@/components/editor/ai-chat-sidebar";
+import { WorkspaceCanvas } from "@/components/editor/workspace-canvas";
+import { resolveProjectAccess } from "@/lib/project-access";
 
 /**
- * Placeholder workspace. Confirms the user can access the project (owner or
- * collaborator) and shows its identity; the real canvas arrives in a later
- * feature. The route exists so creating a project has a destination to open.
+ * Workspace shell for `/editor/[projectId]` (project id === Liveblocks room id).
+ * Stays a server component for the access gate; the collaborative canvas and AI
+ * panel are the client pieces it mounts. The navbar (project name, share, AI
+ * toggle) and the project sidebar come from the editor layout's shell.
  */
 export default async function WorkspacePage({
   params,
@@ -13,20 +16,15 @@ export default async function WorkspacePage({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
-  const { userId, email } = await getCurrentUserContext();
+  const access = await resolveProjectAccess(projectId);
 
-  if (!userId) notFound();
-
-  const project = await findAccessibleProject(projectId, userId, email);
-  if (!project) notFound();
+  if (access.status === "unauthenticated") redirect("/sign-in");
+  if (access.status === "denied") return <AccessDenied />;
 
   return (
-    <main className="flex min-h-[calc(100vh-3rem)] flex-col items-center justify-center gap-3 px-6 text-center">
-      <h1 className="text-2xl font-semibold text-copy-primary">{project.name}</h1>
-      <p className="text-sm text-copy-muted">
-        Room ID <span className="font-mono text-copy-secondary">{project.id}</span>
-      </p>
-      <p className="text-sm text-copy-faint">Workspace canvas coming soon.</p>
-    </main>
+    <div className="flex h-[calc(100vh-3rem)] overflow-hidden">
+      <WorkspaceCanvas roomId={projectId} />
+      <AiChatSidebar />
+    </div>
   );
 }

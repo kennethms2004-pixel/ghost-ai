@@ -50,4 +50,5 @@ next-env.d.ts
 /.vscode/
 /.agents/
 /.claude/
+/memory/
 /skills-lock.json

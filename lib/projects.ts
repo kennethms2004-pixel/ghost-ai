@@ -100,3 +100,51 @@ export function renameProject(projectId: string, ownerId: string, name: string) 
 export function deleteProject(projectId: string, ownerId: string) {
   return prisma.project.delete({ where: { id: projectId, ownerId } })
 }
+
+/** List a project's collaborators by email, oldest invite first. */
+export function listProjectCollaborators(projectId: string) {
+  return prisma.projectCollaborator.findMany({
+    where: { projectId },
+    orderBy: { createdAt: 'asc' },
+  })
+}
+
+/**
+ * Add a collaborator to a project by email, scoped to the owner so the
+ * ownership check and the write happen atomically — the nested create only runs
+ * when the project belongs to this owner. Emails are stored lowercase so
+ * collaborator lookups match regardless of casing. Throws Prisma `P2025` when no
+ * project matches the id and owner (callers map to 404) and `P2002` when the
+ * email is already a collaborator (callers map to 409).
+ */
+export function addProjectCollaborator(
+  projectId: string,
+  ownerId: string,
+  email: string,
+) {
+  return prisma.project.update({
+    where: { id: projectId, ownerId },
+    data: {
+      collaborators: { create: { email: email.trim().toLowerCase() } },
+    },
+  })
+}
+
+/**
+ * Remove a collaborator from a project by email, scoped to the owner so the
+ * ownership check and the write happen atomically. Throws Prisma `P2025` when no
+ * project matches the id and owner (callers map to 404). Removing an email that
+ * is not a collaborator is a no-op.
+ */
+export function removeProjectCollaborator(
+  projectId: string,
+  ownerId: string,
+  email: string,
+) {
+  return prisma.project.update({
+    where: { id: projectId, ownerId },
+    data: {
+      collaborators: { deleteMany: { email: email.trim().toLowerCase() } },
+    },
+  })
+}
