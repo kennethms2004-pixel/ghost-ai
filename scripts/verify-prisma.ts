@@ -1,5 +1,11 @@
-import 'dotenv/config'
+import { config } from 'dotenv'
 import { PrismaPg } from '@prisma/adapter-pg'
+
+// This script runs outside Next.js (via tsx), which auto-loads `.env.local`.
+// Mirror that here — `DATABASE_URL` lives in `.env.local` — falling back to
+// `.env` if present (`.env.local` wins; dotenv keeps the first value set).
+config({ path: ['.env.local', '.env'] })
+
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { PrismaClient } from '../generated/prisma/client.js'
 
