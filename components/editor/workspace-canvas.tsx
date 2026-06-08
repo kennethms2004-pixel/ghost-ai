@@ -1,17 +1,14 @@
-import { Workflow } from "lucide-react";
+import { CanvasRoom } from "./canvas/canvas-room";
 
 /**
- * Central canvas placeholder. The real React Flow / Liveblocks canvas arrives
- * in a later feature; for now this fills the workspace's main area.
+ * Central canvas area. Hosts the collaborative React Flow canvas for the project
+ * room (room id === project id). Sits on the base background; React Flow fills
+ * the area and draws its own dot-pattern background on top.
  */
-export function WorkspaceCanvas() {
+export function WorkspaceCanvas({ roomId }: { roomId: string }) {
   return (
-    <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-3 bg-base text-center">
-      <Workflow className="h-8 w-8 text-copy-faint" />
-      <p className="text-sm text-copy-muted">Canvas coming soon</p>
-      <p className="text-xs text-copy-faint">
-        This is where your architecture canvas will live.
-      </p>
+    <div className="relative min-w-0 flex-1 bg-base">
+      <CanvasRoom roomId={roomId} />
     </div>
   );
 }
