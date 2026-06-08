@@ -81,7 +81,10 @@ export async function POST(
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  const raw = (body as { email?: unknown }).email
+  const raw =
+    typeof body === 'object' && body !== null
+      ? (body as { email?: unknown }).email
+      : undefined
   if (typeof raw !== 'string' || !EMAIL_PATTERN.test(raw.trim())) {
     return NextResponse.json(
       { error: '`email` is required and must be a valid email address' },

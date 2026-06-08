@@ -1,6 +1,6 @@
 "use client";
 
-import { type DragEvent, useCallback, useMemo, useRef, useState } from "react";
+import { type DragEvent, useCallback, useMemo, useState } from "react";
 import {
   Background,
   BackgroundVariant,
@@ -89,8 +89,6 @@ function FlowCanvasSurface() {
 
   const { screenToFlowPosition, getNode, getEdge } =
     useReactFlow<CanvasNode, CanvasEdge>();
-  /** Counter to disambiguate nodes created within the same millisecond. */
-  const dropCounter = useRef(0);
 
   // Edge hover/editing state lives here so the custom edge renderer can react to
   // it through the EdgeActions context.
@@ -198,7 +196,9 @@ function FlowCanvasSurface() {
       const position = { x: cursor.x - width / 2, y: cursor.y - height / 2 };
 
       const newNode: CanvasNode = {
-        id: `${payload.shape}-${Date.now()}-${dropCounter.current++}`,
+        // A random UUID keeps ids globally unique across collaborators —
+        // a timestamp + per-client counter can collide between clients.
+        id: `${payload.shape}-${crypto.randomUUID()}`,
         type: CANVAS_NODE_TYPE,
         position,
         data: { label: "", color: DEFAULT_NODE_COLOR, shape: payload.shape },

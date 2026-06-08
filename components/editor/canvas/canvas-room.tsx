@@ -1,6 +1,7 @@
 "use client";
 
 import { Component, type ReactNode } from "react";
+import { LiveblocksError } from "@liveblocks/client";
 import {
   ClientSideSuspense,
   LiveblocksProvider,
@@ -53,22 +54,44 @@ function CanvasConnectionError() {
   );
 }
 
+function CanvasGenericError() {
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-6 text-center">
+      <TriangleAlert className="h-8 w-8 text-error" />
+      <p className="text-sm text-copy-primary">Something went wrong with the canvas</p>
+      <p className="text-xs text-copy-faint">
+        Reload the page to try again.
+      </p>
+    </div>
+  );
+}
+
 /**
  * Catches Liveblocks connection/storage errors thrown beneath the room so a
  * failed realtime connection renders a fallback instead of crashing the editor.
+ *
+ * Only `LiveblocksError`s (connection/storage failures) map to the connection
+ * fallback; any other error — an actual rendering bug in the canvas — gets a
+ * neutral fallback instead of being mislabelled as a connection problem.
  */
 class CanvasErrorBoundary extends Component<
   { children: ReactNode },
-  { hasError: boolean }
+  { error: Error | null }
 > {
-  state = { hasError: false };
+  state: { error: Error | null } = { error: null };
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
   }
 
   render() {
-    if (this.state.hasError) return <CanvasConnectionError />;
+    if (this.state.error) {
+      return this.state.error instanceof LiveblocksError ? (
+        <CanvasConnectionError />
+      ) : (
+        <CanvasGenericError />
+      );
+    }
     return this.props.children;
   }
 }

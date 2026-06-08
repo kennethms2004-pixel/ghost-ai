@@ -100,6 +100,7 @@ export function CanvasNodeView({ id, data, selected }: NodeProps<CanvasNode>) {
       {HANDLE_POSITIONS.map((position) => (
         <Handle
           key={position}
+          id={position}
           type="source"
           position={position}
           className="!h-2 !w-2 !rounded-full !border !border-surface-border !bg-white opacity-0 transition-opacity duration-150 group-hover:opacity-100"

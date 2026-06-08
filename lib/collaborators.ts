@@ -10,6 +10,13 @@ import type { Collaborator } from '@/types/collaborator'
  * to email-only rather than failing the request.
  */
 
+/**
+ * Clerk's `getUserList` caps `limit` (and the practical `emailAddress` filter
+ * length) at 100 per request, so larger collaborator lists are looked up in
+ * chunks instead of being silently truncated.
+ */
+const CLERK_LOOKUP_CHUNK_SIZE = 100
+
 /** Build a best-effort display name from a Clerk user's profile fields. */
 function displayName(user: {
   firstName: string | null
@@ -33,15 +40,22 @@ export async function enrichCollaboratorEmails(
 
   try {
     const client = await clerkClient()
-    const { data: users } = await client.users.getUserList({
-      emailAddress: emails,
-      limit: Math.min(emails.length, 500),
-    })
 
-    for (const user of users) {
-      const enriched = { name: displayName(user), imageUrl: user.imageUrl ?? null }
-      for (const address of user.emailAddresses) {
-        byEmail.set(address.emailAddress.toLowerCase(), enriched)
+    // Look up emails in chunks: a single request only returns up to
+    // `CLERK_LOOKUP_CHUNK_SIZE` users, so passing the full list would drop
+    // matches for any collaborator beyond that cap.
+    for (let i = 0; i < emails.length; i += CLERK_LOOKUP_CHUNK_SIZE) {
+      const chunk = emails.slice(i, i + CLERK_LOOKUP_CHUNK_SIZE)
+      const { data: users } = await client.users.getUserList({
+        emailAddress: chunk,
+        limit: chunk.length,
+      })
+
+      for (const user of users) {
+        const enriched = { name: displayName(user), imageUrl: user.imageUrl ?? null }
+        for (const address of user.emailAddresses) {
+          byEmail.set(address.emailAddress.toLowerCase(), enriched)
+        }
       }
     }
   } catch {
