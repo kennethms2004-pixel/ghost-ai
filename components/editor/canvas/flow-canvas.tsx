@@ -143,11 +143,16 @@ function FlowCanvasSurface() {
         nodes,
       );
       // One undo step for the whole import instead of one per added element.
+      // try/finally guarantees history is resumed even if a change handler
+      // throws — otherwise history would stay paused for the rest of the session.
       history.pause();
-      // Nodes go first so the added edges resolve to real endpoints.
-      onNodesChange(newNodes.map((item) => ({ type: "add" as const, item })));
-      onEdgesChange(newEdges.map((item) => ({ type: "add" as const, item })));
-      history.resume();
+      try {
+        // Nodes go first so the added edges resolve to real endpoints.
+        onNodesChange(newNodes.map((item) => ({ type: "add" as const, item })));
+        onEdgesChange(newEdges.map((item) => ({ type: "add" as const, item })));
+      } finally {
+        history.resume();
+      }
       // Fit the view once the new nodes have rendered into the React Flow store.
       window.setTimeout(() => void fitView({ duration: ZOOM_DURATION_MS }), 50);
     },

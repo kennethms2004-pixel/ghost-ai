@@ -76,13 +76,21 @@ export function instantiateTemplate(
 
   const nodes: CanvasNode[] = template.nodes.map((node) => ({
     ...node,
-    id: idMap.get(node.id) as string,
+    // idMap is built from these same nodes, so the lookup is always defined.
+    id: idMap.get(node.id)!,
     position: { x: node.position.x + offsetX, y: node.position.y + offsetY },
   }));
 
   const edges: CanvasEdge[] = template.edges.map((edge) => {
-    const source = idMap.get(edge.source) as string;
-    const target = idMap.get(edge.target) as string;
+    const source = idMap.get(edge.source);
+    const target = idMap.get(edge.target);
+    // Fail loudly on a malformed template (an edge pointing at a missing node)
+    // instead of silently producing an edge with `id: undefined`.
+    if (!source || !target) {
+      throw new Error(
+        `Template "${template.id}" has edge "${edge.id}" referencing an unknown node`,
+      );
+    }
     return { ...edge, id: `edge-${source}-${target}`, source, target };
   });
 

@@ -5,6 +5,9 @@ import type { CanvasTemplate } from "./starter-templates";
 /** Padding (in canvas units) added around the computed bounds. */
 const BOUNDS_PADDING = 24;
 
+/** Dimmed line color for preview edges (the canvas edge color at rest). */
+const DEFAULT_EDGE_PREVIEW_COLOR = "rgba(248, 250, 252, 0.4)";
+
 interface NodeRect {
   x: number;
   y: number;
@@ -143,6 +146,3 @@ export function StarterTemplatePreview({ template }: { template: CanvasTemplate 
     </svg>
   );
 }
-
-/** Dimmed line color for preview edges (the canvas edge color at rest). */
-const DEFAULT_EDGE_PREVIEW_COLOR = "rgba(248, 250, 252, 0.4)";
