@@ -1,9 +1,20 @@
-## Open (deferred, non-blocking)
+# Drag-and-drop shape fidelity + drag feedback
 
-_None._
+**Repro steps**
+1. Open the editor canvas (`/editor/[projectId]`).
+2. From the bottom shape panel, pick a non-rectangular shape (e.g. circle, diamond).
+3. Drag it onto the canvas and watch the rendered appearance + any feedback during the drag.
+4. Drop it and observe the final rendering.
 
-## Resolved
+**Expected**
+- Shape fidelity: the dragged shape keeps its real geometry both while dragging and after drop (a circle stays a circle, a diamond stays a diamond).
+- Drag feedback: dragging shows a clear affordance — smooth animation and/or cursor change, subtle scale/opacity/shadow — while the pointer is down.
 
-1. ~~When I log in everything is fine, but when I log out Next.js renders infinitely.~~ Fixed: set `afterSignOutUrl="/sign-in"` on `ClerkProvider` so logout lands on the public sign-in page instead of bouncing through `/`'s auth redirect during sign-out handshake.
-2. ~~pg SSL deprecation warning (`?sslmode=require`).~~ Fixed: changed `sslmode=require` → `sslmode=verify-full` in `.env.local`'s `DATABASE_URL` (`db.prisma.io` serves a publicly-trusted cert). Verified with `tsx scripts/verify-prisma.ts` — DB still connects, warning gone.
-3. ~~Seed/verify scripts looked for `.env` but env is now in `.env.local`.~~ Fixed: `prisma/seed.ts` and `scripts/verify-prisma.ts` now `config({ path: ['.env.local', '.env'] })` (from `dotenv`) instead of `import 'dotenv/config'`, mirroring Next.js's `.env.local`-first load order (`.env.local` wins; `.env` is a fallback). Verified the script loads env and reads the DB.
+**Actual**
+- Non-rectangular shapes render as plain rectangles during drag and after drop.
+- There is no visual indication or animation while dragging.
+
+**Acceptance criteria**
+1. Any shape from the shape panel renders with correct geometry in-drag and after drop (no forced rectangular masking).
+2. Dragging triggers a smooth animation and a clear visual affordance present while the pointer is down.
+3. No regressions to existing drag behavior (drag start / hover / drop events and final placement still work).

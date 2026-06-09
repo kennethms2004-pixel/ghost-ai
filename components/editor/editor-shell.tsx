@@ -6,6 +6,7 @@ import { EditorNavbar } from "./editor-navbar";
 import { ProjectSidebar } from "./project-sidebar";
 import { ProjectDialogsProvider } from "./project-dialogs-provider";
 import { AiSidebarProvider } from "./ai-sidebar-context";
+import { CanvasSaveStatusProvider } from "./canvas-save-status-context";
 import { StarterTemplatesProvider } from "./starter-templates-context";
 import type { Project } from "@/types/project";
 
@@ -36,23 +37,25 @@ export function EditorShell({
 
   return (
     <AiSidebarProvider>
-      <StarterTemplatesProvider>
-        <ProjectDialogsProvider>
-          <EditorNavbar
-            isSidebarOpen={sidebarOpen}
-            onSidebarToggle={() => setSidebarOpen((prev) => !prev)}
-            activeProject={activeProject}
-          />
-          <ProjectSidebar
-            isOpen={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
-            ownedProjects={ownedProjects}
-            sharedProjects={sharedProjects}
-            activeProjectId={activeProjectId}
-          />
-          <div className="pt-12 min-h-screen bg-base">{children}</div>
-        </ProjectDialogsProvider>
-      </StarterTemplatesProvider>
+      <CanvasSaveStatusProvider>
+        <StarterTemplatesProvider>
+          <ProjectDialogsProvider>
+            <EditorNavbar
+              isSidebarOpen={sidebarOpen}
+              onSidebarToggle={() => setSidebarOpen((prev) => !prev)}
+              activeProject={activeProject}
+            />
+            <ProjectSidebar
+              isOpen={sidebarOpen}
+              onClose={() => setSidebarOpen(false)}
+              ownedProjects={ownedProjects}
+              sharedProjects={sharedProjects}
+              activeProjectId={activeProjectId}
+            />
+            <div className="pt-12 min-h-screen bg-base">{children}</div>
+          </ProjectDialogsProvider>
+        </StarterTemplatesProvider>
+      </CanvasSaveStatusProvider>
     </AiSidebarProvider>
   );
 }

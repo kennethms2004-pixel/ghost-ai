@@ -4,6 +4,7 @@ import { LayoutTemplate, PanelLeftClose, PanelLeftOpen, Sparkles } from "lucide-
 import { Button } from "@/components/ui/button";
 import { UserButton } from "@clerk/nextjs";
 import { useAiSidebar } from "./ai-sidebar-context";
+import { CanvasSaveStatus } from "./canvas-save-status";
 import { useStarterTemplates } from "./starter-templates-context";
 import { ShareProjectDialog } from "./dialogs/share-project-dialog";
 import type { Project } from "@/types/project";
@@ -50,6 +51,7 @@ export function EditorNavbar({
       <div className="flex items-center gap-1">
         {activeProject && (
           <>
+            <CanvasSaveStatus />
             <Button
               variant="ghost"
               size="sm"
@@ -77,6 +79,9 @@ export function EditorNavbar({
             </Button>
           </>
         )}
+        {/* The account control (sign in/out, account settings) lives in the
+            navbar panel in every view — the canvas presence group only shows
+            collaborator avatars, never the current user's account button. */}
         <UserButton />
       </div>
     </header>

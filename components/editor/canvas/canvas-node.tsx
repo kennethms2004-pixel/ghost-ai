@@ -106,13 +106,20 @@ export function CanvasNodeView({ id, data, selected }: NodeProps<CanvasNode>) {
         selected={selected}
       />
 
+      {/* All four sides are connectable. `!z-10` lifts the handles above the
+          label overlay below (an `absolute inset-0` div rendered after them) —
+          otherwise the overlay covers the inner half of each handle and only the
+          top handle, whose grab area sits above the node box, stays clickable.
+          `!pointer-events-auto` keeps them grabbable even before React Flow adds
+          its `connectionindicator` class (handles are `pointer-events: none` by
+          default). Loose connection mode makes every source handle bidirectional. */}
       {HANDLE_POSITIONS.map((position) => (
         <Handle
           key={position}
           id={position}
           type="source"
           position={position}
-          className="!h-2 !w-2 !rounded-full !border !border-surface-border !bg-white opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+          className="!pointer-events-auto !z-10 !h-2.5 !w-2.5 !rounded-full !border !border-surface-border !bg-white opacity-0 transition-opacity duration-150 group-hover:opacity-100"
         />
       ))}
 

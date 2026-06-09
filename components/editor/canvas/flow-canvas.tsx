@@ -1,6 +1,14 @@
 "use client";
 
-import { type DragEvent, useCallback, useMemo, useState } from "react";
+import {
+  type DragEvent,
+  type MouseEvent as ReactMouseEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Background,
   BackgroundVariant,
@@ -22,6 +30,7 @@ import {
   useHistory,
   useRedo,
   useUndo,
+  useUpdateMyPresence,
 } from "@liveblocks/react/suspense";
 import "@xyflow/react/dist/style.css";
 import { cn } from "@/lib/utils";
@@ -37,6 +46,9 @@ import {
   SHAPE_DRAG_MIME,
 } from "@/types/canvas";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useCanvasAutosave } from "@/hooks/use-canvas-autosave";
+import { useCanvasLoader } from "@/hooks/use-canvas-loader";
+import { useCanvasSaveStatus } from "../canvas-save-status-context";
 import { useStarterTemplates } from "../starter-templates-context";
 import { StarterTemplatesModal } from "../starter-templates-modal";
 import { type CanvasTemplate, instantiateTemplate } from "../starter-templates";
@@ -44,7 +56,9 @@ import { CanvasControls } from "./canvas-controls";
 import { CanvasEdgeView } from "./canvas-edge";
 import { CanvasNodeView } from "./canvas-node";
 import { EdgeActionsProvider, type EdgeActions } from "./edge-actions";
+import { LiveCursors } from "./live-cursors";
 import { NodeActionsProvider, type NodeActions } from "./node-actions";
+import { PresenceAvatars } from "./presence-avatars";
 import { ShapePanel } from "./shape-panel";
 
 /** Stable node-type map — defined once so React Flow doesn't warn on re-renders. */
@@ -80,15 +94,15 @@ const ZOOM_DURATION_MS = 200;
  * Wrapped in {@link ReactFlowProvider} so the drop handler on the canvas wrapper
  * can use `useReactFlow().screenToFlowPosition` to place dropped shapes.
  */
-export function FlowCanvas() {
+export function FlowCanvas({ projectId }: { projectId: string }) {
   return (
     <ReactFlowProvider>
-      <FlowCanvasSurface />
+      <FlowCanvasSurface projectId={projectId} />
     </ReactFlowProvider>
   );
 }
 
-function FlowCanvasSurface() {
+function FlowCanvasSurface({ projectId }: { projectId: string }) {
   // `onConnect` is intentionally NOT taken from the hook: its built-in handler
   // adds a plain default edge and ignores `defaultEdgeOptions`, so new
   // connections would render without the custom edge type or arrow. We build a
@@ -128,6 +142,54 @@ function FlowCanvasSurface() {
   );
 
   useKeyboardShortcuts({ reactFlow, onUndo: undo, onRedo: redo });
+
+  // Canvas persistence: load the saved snapshot when the room is empty, then
+  // enable debounced autosave. `loaded` gates autosave so an empty mount can
+  // never overwrite a saved snapshot before it has a chance to load.
+  const { setStatus, registerSave } = useCanvasSaveStatus();
+  const [loaded, setLoaded] = useState(false);
+
+  // This surface is keyed by project (see CanvasRoom), so it mounts fresh on
+  // every canvas switch. Clear any leftover save status from the previous
+  // project so the navbar indicator doesn't claim "Saved" before this canvas has
+  // actually loaded or saved. Routed through a ref so it isn't a direct
+  // set-state-in-effect call.
+  const setStatusRef = useRef(setStatus);
+  useEffect(() => {
+    setStatusRef.current = setStatus;
+  }, [setStatus]);
+  useEffect(() => {
+    setStatusRef.current("idle");
+  }, []);
+
+  useCanvasLoader({
+    projectId,
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    history,
+    onLoaded: () => setLoaded(true),
+  });
+
+  const { saveNow } = useCanvasAutosave({
+    projectId,
+    nodes,
+    edges,
+    enabled: loaded,
+    onStatus: setStatus,
+  });
+
+  // Expose this canvas's save to the navbar's Save button while mounted; clear
+  // it on unmount (project switch) so the button disables when no canvas is open.
+  const saveNowRef = useRef(saveNow);
+  useEffect(() => {
+    saveNowRef.current = saveNow;
+  }, [saveNow]);
+  useEffect(() => {
+    registerSave(() => saveNowRef.current());
+    return () => registerSave(null);
+  }, [registerSave]);
 
   // Starter-template import: open state is bridged from the navbar; the actual
   // replace runs here, where the collaborative node/edge state lives.
@@ -283,6 +345,23 @@ function FlowCanvasSurface() {
     [screenToFlowPosition, onNodesChange],
   );
 
+  // Broadcast this user's cursor to the room. Cursor is stored in flow
+  // coordinates so it stays anchored to canvas content under each viewer's own
+  // pan/zoom (see LiveCursors); other clients render it, never the sender.
+  const updateMyPresence = useUpdateMyPresence();
+
+  const onMouseMove = useCallback(
+    (event: ReactMouseEvent) => {
+      const cursor = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+      updateMyPresence({ cursor });
+    },
+    [screenToFlowPosition, updateMyPresence],
+  );
+
+  const onMouseLeave = useCallback(() => {
+    updateMyPresence({ cursor: null });
+  }, [updateMyPresence]);
+
   return (
     <NodeActionsProvider value={nodeActions}>
       <EdgeActionsProvider value={edgeActions}>
@@ -305,6 +384,8 @@ function FlowCanvasSurface() {
           onEdgeMouseEnter={(_, edge) => setHoveredEdgeId(edge.id)}
           onEdgeMouseLeave={() => setHoveredEdgeId(null)}
           onEdgeDoubleClick={(_, edge) => setEditingEdgeId(edge.id)}
+          onMouseMove={onMouseMove}
+          onMouseLeave={onMouseLeave}
           connectionMode={ConnectionMode.Loose}
           colorMode="dark"
           fitView
@@ -312,6 +393,10 @@ function FlowCanvasSurface() {
         >
           <Background variant={BackgroundVariant.Dots} />
         </ReactFlow>
+
+        <LiveCursors />
+
+        <PresenceAvatars />
 
         <div
           className={cn(
