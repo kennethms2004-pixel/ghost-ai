@@ -19,6 +19,13 @@ export interface EdgeActions {
   setEditingEdgeId: (id: string | null) => void;
   /** Replaces an edge's label, writing through to collaborative storage. */
   updateEdgeLabel: (id: string, label: string) => void;
+  /**
+   * Pauses Liveblocks history so a run of edits (e.g. typing a label) collapses
+   * into a single undo step. Must be balanced with {@link resumeHistory}.
+   */
+  pauseHistory: () => void;
+  /** Resumes Liveblocks history, committing the paused edits as one undo step. */
+  resumeHistory: () => void;
 }
 
 const EdgeActionsContext = createContext<EdgeActions | null>(null);

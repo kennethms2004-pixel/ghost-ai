@@ -42,8 +42,14 @@ export function CanvasEdgeView({
   selected,
   markerEnd,
 }: EdgeProps<CanvasEdge>) {
-  const { hoveredEdgeId, editingEdgeId, setEditingEdgeId, updateEdgeLabel } =
-    useEdgeActions();
+  const {
+    hoveredEdgeId,
+    editingEdgeId,
+    setEditingEdgeId,
+    updateEdgeLabel,
+    pauseHistory,
+    resumeHistory,
+  } = useEdgeActions();
 
   const editing = editingEdgeId === id;
   const active = editing || selected === true || hoveredEdgeId === id;
@@ -69,6 +75,14 @@ export function CanvasEdgeView({
     input.focus();
     input.select();
   }, [editing]);
+
+  // Pause history for the whole editing session so undo/redo treats the typed
+  // label as one step instead of one entry per keystroke.
+  useEffect(() => {
+    if (!editing) return;
+    pauseHistory();
+    return () => resumeHistory();
+  }, [editing, pauseHistory, resumeHistory]);
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     // Keep keystrokes inside the editor: stops React Flow from treating

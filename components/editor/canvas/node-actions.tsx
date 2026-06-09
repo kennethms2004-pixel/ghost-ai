@@ -17,6 +17,13 @@ export interface NodeActions {
    * from the fill at render time, so only the fill is stored.
    */
   updateNodeColor: (id: string, color: string) => void;
+  /**
+   * Pauses Liveblocks history so a run of edits (e.g. typing a label) collapses
+   * into a single undo step. Must be balanced with {@link resumeHistory}.
+   */
+  pauseHistory: () => void;
+  /** Resumes Liveblocks history, committing the paused edits as one undo step. */
+  resumeHistory: () => void;
 }
 
 const NodeActionsContext = createContext<NodeActions | null>(null);

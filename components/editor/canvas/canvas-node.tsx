@@ -42,7 +42,7 @@ const LABEL_PLACEHOLDER = "Add label";
  */
 export function CanvasNodeView({ id, data, selected }: NodeProps<CanvasNode>) {
   const textColor = nodeTextColorForFill(data.color);
-  const { updateNodeLabel } = useNodeActions();
+  const { updateNodeLabel, pauseHistory, resumeHistory } = useNodeActions();
 
   const [isEditing, setIsEditing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -59,6 +59,15 @@ export function CanvasNodeView({ id, data, selected }: NodeProps<CanvasNode>) {
     textarea.focus();
     textarea.select();
   }, [editing]);
+
+  // Pause history for the whole editing session so undo/redo treats the typed
+  // label as one step instead of one entry per keystroke. Resuming on cleanup
+  // covers blur, Escape/Enter, and deselecting the node.
+  useEffect(() => {
+    if (!editing) return;
+    pauseHistory();
+    return () => resumeHistory();
+  }, [editing, pauseHistory, resumeHistory]);
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     // Keep keystrokes inside the editor: stops React Flow from treating
