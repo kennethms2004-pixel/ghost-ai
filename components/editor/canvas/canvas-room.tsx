@@ -21,11 +21,17 @@ export function CanvasRoom({ roomId }: { roomId: string }) {
     <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
       <RoomProvider
         id={roomId}
-        initialPresence={{ cursor: null, isThinking: false }}
+        initialPresence={{ cursor: null, thinking: false }}
       >
         <CanvasErrorBoundary>
           <ClientSideSuspense fallback={<CanvasLoading />}>
-            <FlowCanvas />
+            {/* `key={roomId}` remounts the whole canvas surface when the user
+                switches projects. Without it, navigating between
+                `/editor/[projectId]` routes (same route segment, different param)
+                reuses the same React instance, so the loader's "already ran" guard
+                and the autosave baseline leak across projects — the new canvas
+                never loads from Blob and edits never save. */}
+            <FlowCanvas key={roomId} projectId={roomId} />
           </ClientSideSuspense>
         </CanvasErrorBoundary>
       </RoomProvider>

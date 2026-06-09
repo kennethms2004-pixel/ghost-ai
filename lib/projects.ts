@@ -101,6 +101,19 @@ export function deleteProject(projectId: string, ownerId: string) {
   return prisma.project.delete({ where: { id: projectId, ownerId } })
 }
 
+/**
+ * Persist the Vercel Blob URL of a project's saved canvas JSON. Updates by id
+ * only — the route gates access with `findAccessibleProject` first, so any
+ * project member (owner or collaborator) may autosave the shared canvas. Throws
+ * Prisma `P2025` when no project matches the id.
+ */
+export function updateProjectCanvasJsonPath(projectId: string, url: string) {
+  return prisma.project.update({
+    where: { id: projectId },
+    data: { canvasJsonPath: url },
+  })
+}
+
 /** List a project's collaborators by email, oldest invite first. */
 export function listProjectCollaborators(projectId: string) {
   return prisma.projectCollaborator.findMany({

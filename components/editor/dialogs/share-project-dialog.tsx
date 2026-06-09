@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Check, Copy, Loader2, Share2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -173,10 +174,11 @@ function CollaboratorRow({
   return (
     <li className="group flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-elevated">
       {collaborator.imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- external Clerk avatar URL
-        <img
+        <Image
           src={collaborator.imageUrl}
           alt=""
+          width={32}
+          height={32}
           className="h-8 w-8 shrink-0 rounded-full object-cover"
         />
       ) : (

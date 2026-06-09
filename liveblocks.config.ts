@@ -4,7 +4,7 @@
  * the app — there is no runtime here, only the shared shape contract.
  *
  * - `Presence`: per-user ephemeral state broadcast to the room. The cursor is
- *   `null` until the pointer enters the canvas; `isThinking` flags a user whose
+ *   `null` until the pointer enters the canvas; `thinking` flags a user whose
  *   AI request is in flight.
  * - `UserMeta`: immutable identity attached to a session at auth time. `id` is
  *   the Clerk user id; `info` carries what other clients render (name, avatar,
@@ -14,7 +14,7 @@ declare global {
   interface Liveblocks {
     Presence: {
       cursor: { x: number; y: number } | null
-      isThinking: boolean
+      thinking: boolean
     }
 
     UserMeta: {
