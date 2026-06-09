@@ -9,7 +9,6 @@ import {
   type DefaultEdgeOptions,
   type EdgeTypes,
   MarkerType,
-  MiniMap,
   type NodeTypes,
   type OnConnect,
   ReactFlow,
@@ -17,6 +16,13 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import { useLiveblocksFlow } from "@liveblocks/react-flow";
+import {
+  useCanRedo,
+  useCanUndo,
+  useHistory,
+  useRedo,
+  useUndo,
+} from "@liveblocks/react/suspense";
 import "@xyflow/react/dist/style.css";
 import { cn } from "@/lib/utils";
 import {
@@ -30,6 +36,11 @@ import {
   type ShapeDragPayload,
   SHAPE_DRAG_MIME,
 } from "@/types/canvas";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useStarterTemplates } from "../starter-templates-context";
+import { StarterTemplatesModal } from "../starter-templates-modal";
+import { type CanvasTemplate, instantiateTemplate } from "../starter-templates";
+import { CanvasControls } from "./canvas-controls";
 import { CanvasEdgeView } from "./canvas-edge";
 import { CanvasNodeView } from "./canvas-node";
 import { EdgeActionsProvider, type EdgeActions } from "./edge-actions";
@@ -56,6 +67,9 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
   },
   style: { stroke: DEFAULT_EDGE_COLOR, strokeWidth: 1.5, strokeLinecap: "round" },
 };
+
+/** Smooth-motion duration (ms) for control-bar zoom + fit actions. */
+const ZOOM_DURATION_MS = 200;
 
 /**
  * React Flow canvas wired to Liveblocks shared storage. `useLiveblocksFlow`
@@ -87,8 +101,58 @@ function FlowCanvasSurface() {
       suspense: true,
     });
 
-  const { screenToFlowPosition, getNode, getEdge } =
-    useReactFlow<CanvasNode, CanvasEdge>();
+  const reactFlow = useReactFlow<CanvasNode, CanvasEdge>();
+  const { screenToFlowPosition, getNode, getEdge, zoomIn, zoomOut, fitView } =
+    reactFlow;
+
+  // Liveblocks history powers undo/redo so it stays consistent across clients.
+  const undo = useUndo();
+  const redo = useRedo();
+  const canUndo = useCanUndo();
+  const canRedo = useCanRedo();
+  // pause/resume let an editing session (typing a label) collapse into a single
+  // undo step instead of one entry per keystroke.
+  const history = useHistory();
+
+  const handleZoomIn = useCallback(
+    () => void zoomIn({ duration: ZOOM_DURATION_MS }),
+    [zoomIn],
+  );
+  const handleZoomOut = useCallback(
+    () => void zoomOut({ duration: ZOOM_DURATION_MS }),
+    [zoomOut],
+  );
+  const handleFitView = useCallback(
+    () => void fitView({ duration: ZOOM_DURATION_MS }),
+    [fitView],
+  );
+
+  useKeyboardShortcuts({ reactFlow, onUndo: undo, onRedo: redo });
+
+  // Starter-template import: open state is bridged from the navbar; the actual
+  // replace runs here, where the collaborative node/edge state lives.
+  const { isOpen: templatesOpen, close: closeTemplates } = useStarterTemplates();
+
+  const importTemplate = useCallback(
+    (template: CanvasTemplate) => {
+      // Add the template alongside existing work: `instantiateTemplate` assigns
+      // fresh ids and offsets the nodes into empty space to the right, so the
+      // import never collides with or overlaps diagrams already on the canvas.
+      const { nodes: newNodes, edges: newEdges } = instantiateTemplate(
+        template,
+        nodes,
+      );
+      // One undo step for the whole import instead of one per added element.
+      history.pause();
+      // Nodes go first so the added edges resolve to real endpoints.
+      onNodesChange(newNodes.map((item) => ({ type: "add" as const, item })));
+      onEdgesChange(newEdges.map((item) => ({ type: "add" as const, item })));
+      history.resume();
+      // Fit the view once the new nodes have rendered into the React Flow store.
+      window.setTimeout(() => void fitView({ duration: ZOOM_DURATION_MS }), 50);
+    },
+    [nodes, onNodesChange, onEdgesChange, history, fitView],
+  );
 
   // Edge hover/editing state lives here so the custom edge renderer can react to
   // it through the EdgeActions context.
@@ -109,8 +173,10 @@ function FlowCanvasSurface() {
           { type: "replace", id, item: { ...edge, data: { ...edge.data, label } } },
         ]);
       },
+      pauseHistory: history.pause,
+      resumeHistory: history.resume,
     }),
-    [hoveredEdgeId, editingEdgeId, getEdge, onEdgesChange],
+    [hoveredEdgeId, editingEdgeId, getEdge, onEdgesChange, history],
   );
 
   // Node-level mutations routed through `onNodesChange` (the Liveblocks write
@@ -131,8 +197,10 @@ function FlowCanvasSurface() {
           { type: "replace", id, item: { ...node, data: { ...node.data, color } } },
         ]);
       },
+      pauseHistory: history.pause,
+      resumeHistory: history.resume,
     }),
-    [getNode, onNodesChange],
+    [getNode, onNodesChange, history],
   );
 
   // Build new connections as custom canvas edges (with the arrow + light stroke
@@ -238,7 +306,6 @@ function FlowCanvasSurface() {
           style={{ background: "transparent" }}
         >
           <Background variant={BackgroundVariant.Dots} />
-          <MiniMap />
         </ReactFlow>
 
         <div
@@ -248,7 +315,25 @@ function FlowCanvasSurface() {
           )}
         />
 
+        <CanvasControls
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onFitView={handleFitView}
+          onUndo={undo}
+          onRedo={redo}
+          canUndo={canUndo}
+          canRedo={canRedo}
+        />
+
         <ShapePanel />
+
+        <StarterTemplatesModal
+          open={templatesOpen}
+          onOpenChange={(next) => {
+            if (!next) closeTemplates();
+          }}
+          onImport={importTemplate}
+        />
       </div>
       </EdgeActionsProvider>
     </NodeActionsProvider>

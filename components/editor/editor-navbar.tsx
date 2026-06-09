@@ -1,9 +1,10 @@
 "use client";
 
-import { PanelLeftClose, PanelLeftOpen, Sparkles } from "lucide-react";
+import { LayoutTemplate, PanelLeftClose, PanelLeftOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserButton } from "@clerk/nextjs";
 import { useAiSidebar } from "./ai-sidebar-context";
+import { useStarterTemplates } from "./starter-templates-context";
 import { ShareProjectDialog } from "./dialogs/share-project-dialog";
 import type { Project } from "@/types/project";
 
@@ -20,6 +21,7 @@ export function EditorNavbar({
   activeProject,
 }: EditorNavbarProps) {
   const { isOpen: isAiOpen, toggle: toggleAi } = useAiSidebar();
+  const { open: openTemplates } = useStarterTemplates();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-12 flex items-center gap-2 px-3 bg-surface border-b border-surface-border">
@@ -48,6 +50,16 @@ export function EditorNavbar({
       <div className="flex items-center gap-1">
         {activeProject && (
           <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={openTemplates}
+              aria-label="Start from a template"
+              className="gap-1.5 text-copy-secondary hover:text-copy-primary"
+            >
+              <LayoutTemplate className="h-4 w-4" />
+              Templates
+            </Button>
             <ShareProjectDialog project={activeProject} />
             <Button
               variant="ghost"
