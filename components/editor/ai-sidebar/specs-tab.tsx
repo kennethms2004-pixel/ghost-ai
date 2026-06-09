@@ -14,6 +14,8 @@ export function SpecsTab() {
       <div className="border-b border-surface-border p-3">
         <Button
           type="button"
+          disabled
+          aria-label="Generate spec"
           className="w-full bg-ai text-white hover:bg-ai/90"
         >
           <Sparkles className="h-4 w-4" />

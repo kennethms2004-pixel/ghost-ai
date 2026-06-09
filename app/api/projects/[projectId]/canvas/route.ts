@@ -99,6 +99,14 @@ export async function GET(
   }
 
   const text = await new Response(result.stream).text()
-  const canvas = JSON.parse(text)
+  let canvas: unknown
+  try {
+    canvas = JSON.parse(text)
+  } catch (error) {
+    // A corrupted/partially-written blob shouldn't 500 the load — treat it as
+    // "nothing saved" so the canvas falls back to the live room state.
+    console.error(`Failed to parse canvas blob for project ${projectId}:`, error)
+    return NextResponse.json({ canvas: null })
+  }
   return NextResponse.json({ canvas })
 }
